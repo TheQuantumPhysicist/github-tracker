@@ -17,4 +17,8 @@ pub struct RunOptions {
     /// for more information
     #[clap(long)]
     pub github_access_token: String,
+
+    /// The directory, in which the data will be stored
+    #[clap(long)]
+    pub data_dir: std::path::PathBuf,
 }

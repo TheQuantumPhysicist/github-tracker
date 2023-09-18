@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, std::hash::Hash)]
 pub struct GithubIssueOutline {
     pub title: String,
     pub number: u64,
@@ -26,7 +26,7 @@ pub struct GithubIssueOutline {
     pub user: GithubUser,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, std::hash::Hash)]
 pub struct GithubUser {
     pub login: String,
     pub id: u64,
@@ -49,7 +49,7 @@ pub struct GithubUser {
     pub site_admin: bool,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, std::hash::Hash)]
 pub struct GithubMilestone {
     pub url: String,
     pub html_url: String,
@@ -67,4 +67,18 @@ pub struct GithubMilestone {
     pub updated_at: String,
     pub closed_at: Option<String>,
     pub due_on: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, std::hash::Hash)]
+pub struct GithubIssueComment {
+    pub url: String,
+    pub html_url: String,
+    pub issue_url: String,
+    pub id: u64,
+    pub node_id: String,
+    pub user: GithubUser,
+    pub created_at: String,
+    pub updated_at: String,
+    pub author_association: String,
+    pub body: String,
 }
