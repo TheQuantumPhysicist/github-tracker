@@ -75,7 +75,7 @@ pub fn run_regular(
             }
 
             println!(
-                "Issue #{number} has changed. Downloading all data and comments and writing it.",
+                "Issue #{number} needs an update. Downloading all data and comments and writing it.",
                 number = issue_outline.number
             );
             write_all_issue_data(
