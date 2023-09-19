@@ -78,7 +78,7 @@ pub fn run_regular(
                 "Issue #{number} needs an update. Downloading all data and comments and writing it.",
                 number = issue_outline.number
             );
-            write_all_issue_data(
+            download_and_write_all_issue_data(
                 &options.data_dir,
                 &client,
                 &base_repo_api_url,
@@ -187,7 +187,7 @@ fn load_issue_outline_from_file<P: AsRef<std::path::Path>>(
     Ok(Some(issue_outline))
 }
 
-fn write_all_issue_data<P: AsRef<std::path::Path>>(
+fn download_and_write_all_issue_data<P: AsRef<std::path::Path>>(
     data_dir: P,
     client: &reqwest::blocking::Client,
     base_repo_api_url: &str,
