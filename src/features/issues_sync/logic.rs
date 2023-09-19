@@ -20,6 +20,8 @@ pub enum Error {
     IssueOutlineFileCreationFailed(std::io::Error, u64),
     #[error("Issue outline file writing failed for issue {0}: {1}")]
     IssueOutlineFileWriteFailed(serde_json::Error, u64),
+    #[error("Failed to created data-directory: {0}")]
+    DataDirCreationFailed(std::io::Error),
 }
 
 pub fn run_regular(
@@ -43,8 +45,7 @@ pub fn run_regular(
     );
 
     // Create the data directory if it doesn't exist
-    std::fs::create_dir_all(&options.data_dir)
-        .unwrap_or_else(|e| panic!("Failed to created data directory: {}", e));
+    std::fs::create_dir_all(&options.data_dir).map_err(Error::DataDirCreationFailed)?;
 
     for page in 1..=u32::MAX {
         let issues_url = format!("{base_repo_api_url}/issues?page={page}&state=all");
@@ -133,13 +134,17 @@ fn download_and_write_all_comments_for_issue<P: AsRef<std::path::Path>>(
     Ok(())
 }
 
-fn issue_number_to_issue_outline_file_path<P: AsRef<std::path::Path>>(
+fn issue_obj_to_issue_outline_file_path<P: AsRef<std::path::Path>>(
     data_dir: P,
-    issue_number: u64,
+    issue: &GithubIssueOutline,
 ) -> std::path::PathBuf {
-    data_dir
-        .as_ref()
-        .join(format!("issue_{}.json", issue_number))
+    if issue.pull_request.is_some() {
+        data_dir.as_ref().join(format!("pr_{}.json", issue.number))
+    } else {
+        data_dir
+            .as_ref()
+            .join(format!("issue_{}.json", issue.number))
+    }
 }
 
 fn issue_number_to_comments_path<P: AsRef<std::path::Path>>(
@@ -156,8 +161,7 @@ fn is_an_update_needed<P: AsRef<std::path::Path>>(
     data_dir: P,
     latest_issue_data: &data::GithubIssueOutline,
 ) -> Result<bool, Error> {
-    let issue_number = latest_issue_data.number;
-    let issue_outline = load_issue_outline_from_file(data_dir, issue_number)?;
+    let issue_outline = load_issue_outline_from_file(data_dir, latest_issue_data)?;
 
     match issue_outline {
         None => Ok(true),
@@ -167,9 +171,9 @@ fn is_an_update_needed<P: AsRef<std::path::Path>>(
 
 fn load_issue_outline_from_file<P: AsRef<std::path::Path>>(
     data_dir: P,
-    issue_number: u64,
+    issue_from_api: &GithubIssueOutline,
 ) -> Result<Option<GithubIssueOutline>, Error> {
-    let issue_file_path = issue_number_to_issue_outline_file_path(data_dir, issue_number);
+    let issue_file_path = issue_obj_to_issue_outline_file_path(data_dir, issue_from_api);
 
     if !issue_file_path.exists() {
         return Ok(None);
@@ -192,7 +196,7 @@ fn write_all_issue_data<P: AsRef<std::path::Path>>(
     issue_outline: data::GithubIssueOutline,
 ) -> Result<(), Error> {
     let issue_number = issue_outline.number;
-    let issue_file_path = issue_number_to_issue_outline_file_path(&data_dir, issue_number);
+    let issue_file_path = issue_obj_to_issue_outline_file_path(&data_dir, &issue_outline);
     {
         let issue_file = std::fs::File::create(&issue_file_path)
             .map_err(|e| Error::IssueOutlineFileCreationFailed(e, issue_number))?;

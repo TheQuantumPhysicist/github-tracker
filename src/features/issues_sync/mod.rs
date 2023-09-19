@@ -10,5 +10,7 @@ pub fn run(options: issues_sync_run_options::RunOptions) -> Result<(), Box<dyn s
 
     logic::run_regular(client_maker.as_ref(), options)?;
 
+    println!("End of issues_sync mode reached.");
+
     Ok(())
 }
