@@ -65,7 +65,7 @@ pub fn run_regular(
             println!("Done. No more issues found on page {page}.");
             break;
         }
-        println!("Got {} issues on page {page}", issues.len());
+        println!("Found {} issues on page {page}", issues.len());
 
         // Loop over all issues and download all comments for each issue
         for issue_outline in issues {
