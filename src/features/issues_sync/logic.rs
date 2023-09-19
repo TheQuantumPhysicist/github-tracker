@@ -98,11 +98,13 @@ fn download_and_write_all_comments_for_issue<P: AsRef<std::path::Path>>(
     base_api_repo_url: &str,
     agent: &str,
     token_value: &str,
-    issue_number: u64,
+    issue_outline: &GithubIssueOutline,
 ) -> Result<(), Error> {
     for page in 1..=u32::MAX {
-        let comments_url =
-            format!("{base_api_repo_url}/issues/{issue_number}/comments?page={page}");
+        let comments_url = format!(
+            "{base_api_repo_url}/issues/{}/comments?page={page}",
+            issue_outline.number
+        );
 
         let response = client
             .get(comments_url)
@@ -121,11 +123,11 @@ fn download_and_write_all_comments_for_issue<P: AsRef<std::path::Path>>(
         }
 
         {
-            let comments_file_path = issue_number_to_comments_path(&data_dir, issue_number, page);
+            let comments_file_path = issue_to_comments_path(&data_dir, issue_outline, page);
             let comments_file = std::fs::File::create(&comments_file_path)
-                .map_err(|e| Error::CommentsFileCreationFailed(e, issue_number, page))?;
+                .map_err(|e| Error::CommentsFileCreationFailed(e, issue_outline.number, page))?;
             serde_json::to_writer(comments_file, &comments_data)
-                .map_err(|e| Error::CommentFileWriteFailed(e, issue_number, page))?;
+                .map_err(|e| Error::CommentFileWriteFailed(e, issue_outline.number, page))?;
         }
 
         println!("Got {} comments on page {page}", comments_data.len());
@@ -147,14 +149,21 @@ fn issue_obj_to_issue_outline_file_path<P: AsRef<std::path::Path>>(
     }
 }
 
-fn issue_number_to_comments_path<P: AsRef<std::path::Path>>(
+fn issue_to_comments_path<P: AsRef<std::path::Path>>(
     data_dir: P,
-    issue_number: u64,
+    issue: &GithubIssueOutline,
     page_number: u32,
 ) -> std::path::PathBuf {
-    data_dir
-        .as_ref()
-        .join(format!("issue_{issue_number}_comments-{page_number}.json"))
+    if issue.pull_request.is_some() {
+        data_dir
+            .as_ref()
+            .join(format!("pr_{}_comments-{page_number}.json", issue.number))
+    } else {
+        data_dir.as_ref().join(format!(
+            "issue_{}_comments-{page_number}.json",
+            issue.number
+        ))
+    }
 }
 
 fn is_an_update_needed<P: AsRef<std::path::Path>>(
@@ -210,7 +219,7 @@ fn download_and_write_all_issue_data<P: AsRef<std::path::Path>>(
         &base_repo_api_url,
         &agent,
         &token_value,
-        issue_number,
+        &issue_outline,
     )?;
 
     Ok(())
