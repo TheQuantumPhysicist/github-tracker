@@ -12,7 +12,7 @@ pub struct GithubIssueOutline {
     pub created_at: String,
     pub updated_at: String,
     pub closed_at: Option<String>,
-    pub closed_by: Option<String>,
+    pub closed_by: Option<GithubUser>,
     pub state_reason: Option<String>,
     #[serde(rename = "comments")]
     pub comments_count: u64,
